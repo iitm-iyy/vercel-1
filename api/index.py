@@ -42,10 +42,10 @@ def p95(values: list[float]) -> float:
     rank = max(1, int(round(0.95 * len(xs))))
     return xs[rank - 1]
 
-@app.get("/metrics")
-def metrics_info():
+@app.get("/")
+def root_info():
     return {
-        "message": "Send a POST with JSON body: {\"regions\": [\"apac\", ...], \"threshold_ms\": 180}"
+        "message": "Use POST /metrics with JSON {\"regions\": [...], \"threshold_ms\": 180}"
     }
 
 @app.post("/metrics")
