@@ -42,6 +42,13 @@ def p95(values: list[float]) -> float:
     rank = max(1, int(round(0.95 * len(xs))))
     return xs[rank - 1]
 
+@app.middleware("http")
+async def add_cors_header(request, call_next):
+    response = await call_next(request)
+    if "access-control-allow-origin" not in response.headers:
+        response.headers["access-control-allow-origin"] = "*"
+    return response
+
 @app.get("/")
 def root_info():
     return {
