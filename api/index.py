@@ -13,6 +13,7 @@ from pydantic import BaseModel
 import json
 from pathlib import Path
 from statistics import mean
+from fastapi.responses import JSONResponse, Response
 
 app = FastAPI()
 
@@ -49,7 +50,6 @@ async def add_cors_header(request, call_next):
         response.headers["access-control-allow-origin"] = "*"
     return response
 
-from fastapi.responses import Response
 
 @app.options("/{path:path}")
 def preflight_all(path: str):
@@ -65,9 +65,17 @@ def preflight_all(path: str):
 
 @app.get("/")
 def root_info():
-    return {
-        "message": "Use POST /metrics with JSON {\"regions\": [...], \"threshold_ms\": 180}"
-    }
+    return JSONResponse(
+        {"message": "Use POST /metrics with JSON {\"regions\": [...], \"threshold_ms\": 180}"},
+        headers={"Access-Control-Allow-Origin": "*"}
+    )
+
+@app.get("/metrics")
+def metrics_info():
+    return JSONResponse(
+        {"message": "POST JSON: {\"regions\": [...], \"threshold_ms\": 180}"},
+        headers={"Access-Control-Allow-Origin": "*"}
+    )
 
 @app.post("/metrics")
 def compute_metrics(req: MetricsRequest):
@@ -75,7 +83,12 @@ def compute_metrics(req: MetricsRequest):
     rows = [r for r in DATA if r["region"].lower() in req_regions]
 
     if not rows:
-        raise HTTPException(status_code=404, detail="No data for requested regions")
+        # include header even on errors
+        return JSONResponse(
+            {"detail": "No data for requested regions"},
+            status_code=404,
+            headers={"Access-Control-Allow-Origin": "*"}
+        )
 
     results = {}
     for region in req_regions:
@@ -93,4 +106,7 @@ def compute_metrics(req: MetricsRequest):
             "breaches": breaches
         }
 
-    return {"threshold_ms": req.threshold_ms, "regions": results}
+    return JSONResponse(
+        {"threshold_ms": req.threshold_ms, "regions": results},
+        headers={"Access-Control-Allow-Origin": "*"}
+    )
