@@ -49,6 +49,20 @@ async def add_cors_header(request, call_next):
         response.headers["access-control-allow-origin"] = "*"
     return response
 
+from fastapi.responses import Response
+
+@app.options("/{path:path}")
+def preflight_all(path: str):
+    return Response(
+        status_code=204,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, GET, OPTIONS, PUT, PATCH, DELETE",
+            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Max-Age": "600",
+        },
+    )
+
 @app.get("/")
 def root_info():
     return {
