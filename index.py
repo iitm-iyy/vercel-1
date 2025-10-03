@@ -31,11 +31,16 @@ class MetricsRequest(BaseModel):
 
 DATA = json.loads(Path("q-vercel-latency.json").read_text())
 
-def p95(vals: list[float]) -> float:
-    if not vals: return 0.0
-    xs = sorted(vals)
-    idx = max(1, round(0.95 * len(xs))) - 1
-    return float(xs[idx])
+def p95(values: list[float]) -> float:
+    if not values:
+        return 0.0
+    xs = sorted(values)
+    k = (len(xs) - 1) * 0.95
+    f = int(k)
+    c = min(f + 1, len(xs) - 1)
+    if f == c:
+        return xs[int(k)]
+    return xs[f] + (xs[c] - xs[f]) * (k - f)
 
 @app.options("/{path:path}")
 def preflight_any(path: str):
